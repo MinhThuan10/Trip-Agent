@@ -4,6 +4,9 @@ from app.src.config.settings import settings
 import psycopg
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_postgres import PGVector
+from sentence_transformers import CrossEncoder
+
+
 class BaseService:
     def __init__(self):
         # self.llm = ChatOpenAI(
@@ -24,6 +27,8 @@ class BaseService:
             },
             encode_kwargs={"normalize_embeddings": False},
         )
+
+        self.ranking_model = CrossEncoder(settings.RANKING_MODEL, trust_remote_code=True)
 
         self.database = psycopg.connect(
             settings.DATABASE_URL

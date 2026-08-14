@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     COLLECTION_NAME: str
     EMBEDDING_MODEL: str
+    RANKING_MODEL: str
     
     # LM Studio / Local LLM configuration
     LLM_API_BASE: str
