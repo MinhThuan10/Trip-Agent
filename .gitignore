@@ -74,3 +74,6 @@ coverage.xml
 .DS_Store # macOS
 .Trashes # macOS
 Thumbs.db # Windows
+
+/app/data/
+AGENTS.md

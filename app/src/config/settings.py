@@ -1,0 +1,22 @@
+﻿from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
+
+class Settings(BaseSettings):
+    API_V1_STR: str = "/api/v1"
+    
+    DATABASE_URL: str
+    COLLECTION_NAME: str
+    EMBEDDING_MODEL: str
+    
+    # LM Studio / Local LLM configuration
+    LLM_API_BASE: str
+    LLM_API_KEY: str
+    LLM_MODEL_NAME: str
+
+    
+    # External Flight Search API
+    FLIGHT_SEARCH_API_URL: str = "https://vere.me/api/flights/search/"
+
+    model_config = SettingsConfigDict(env_file=".env" if os.path.exists(".env") else None, env_file_encoding="utf-8")
+    
+settings = Settings()

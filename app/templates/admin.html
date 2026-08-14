@@ -1,0 +1,295 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Agent System - Quản Trị Hệ Thống</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            padding: 48px 0 0;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+            background-color: #212529;
+        }
+        .sidebar-sticky {
+            position: relative;
+            top: 0;
+            height: calc(100vh - 48px);
+            padding-top: .5rem;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .sidebar .nav-link {
+            font-weight: 500;
+            color: #adb5bd;
+            padding: .75rem 1.5rem;
+            margin-bottom: 4px;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
+        }
+        .sidebar .nav-link:hover {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.075);
+        }
+        .sidebar .nav-link.active {
+            color: #fff;
+            background-color: #0d6efd;
+        }
+        .sidebar .nav-link .fas {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .navbar-brand {
+            padding-top: .75rem;
+            padding-bottom: .75rem;
+            font-size: 1.1rem;
+            background-color: rgba(0, 0, 0, .25);
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
+        }
+        main {
+            padding-top: 20px;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            margin-bottom: 1.5rem;
+        }
+        .table-responsive {
+            background: #fff;
+            border-radius: 0.375rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navbar -->
+    <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+        <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6 text-white" href="#">
+            <i class="fas fa-plane-departure me-2"></i><strong>Trip Agent Admin</strong>
+        </a>
+        <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="navbar-nav">
+            <div class="nav-item text-nowrap px-3">
+                <span class="text-secondary small me-3">Hệ thống AI Bán Vé</span>
+                <a class="nav-link d-inline text-white" href="/docs" target="_blank"><i class="fas fa-book me-1"></i> API Docs</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar Navigation -->
+            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky sidebar-sticky px-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" onclick="switchTab('aviation-section', this)">
+                                <i class="fas fa-plane-circle-check"></i> Sân Bay & Hãng Bay
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="switchTab('rag-section', this)">
+                                <i class="fas fa-database"></i> Tài Liệu RAG
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="switchTab('users-section', this)">
+                                <i class="fas fa-users"></i> Quản Lý User
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="switchTab('messages-section', this)">
+                                <i class="fas fa-comments"></i> Tin Nhắn (Messages)
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="switchTab('feedback-section', this)">
+                                <i class="fas fa-star-half-stroke"></i> Phản Hồi (Feedback)
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content Area -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                
+                <!-- SÂN BAY & HÃNG BAY SECTION -->
+                <div id="aviation-section" class="tab-content-section">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2"><i class="fas fa-plane-circle-check text-primary me-2"></i>Sân Bay & Hãng Hàng Không</h1>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card p-3">
+                                <h5 class="card-title text-secondary mb-3"><i class="fas fa-map-marked-alt me-2"></i>Danh Sách Sân Bay</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0" id="airportsTable">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>IATA</th>
+                                                <th>Tên Sân Bay</th>
+                                                <th>Thành Phố</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr><td colspan="3" class="text-center py-3 text-muted">Đang tải dữ liệu...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="card p-3">
+                                <h5 class="card-title text-secondary mb-3"><i class="fas fa-plane me-2"></i>Hãng Hàng Không</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0" id="airlinesTable">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>IATA</th>
+                                                <th>Mã ICAO</th>
+                                                <th>Tên Hãng</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr><td colspan="3" class="text-center py-3 text-muted">Đang tải dữ liệu...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TÀI LIỆU RAG SECTION -->
+                <div id="rag-section" class="tab-content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2"><i class="fas fa-database text-warning me-2"></i>Quản Lý Tài Liệu RAG</h1>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                            <i class="fas fa-upload me-1"></i> Upload Tài Liệu PDF
+                        </button>
+                    </div>
+                    <div class="card p-3">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="ragTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Danh Mục</th>
+                                        <th>Tên File</th>
+                                        <th>Số Lượng Chunks</th>
+                                        <th class="text-end">Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="4" class="text-center py-4 text-muted">Đang tải dữ liệu...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- USERS SECTION -->
+                <div id="users-section" class="tab-content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2"><i class="fas fa-users text-info me-2"></i>Quản Lý Người Dùng</h1>
+                    </div>
+                    <div class="card p-4 text-center">
+                        <div class="py-5">
+                            <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">Chưa có người dùng nào trong hệ thống</h4>
+                            <p class="text-secondary small">Tính năng quản lý người dùng sẽ hiển thị ở đây khi hệ thống có dữ liệu user.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MESSAGES SECTION -->
+                <div id="messages-section" class="tab-content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2"><i class="fas fa-comments text-success me-2"></i>Lịch Sử Tin Nhắn (Messages)</h1>
+                    </div>
+                    <div class="card p-4 text-center">
+                        <div class="py-5">
+                            <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">Chưa có tin nhắn nào từ chatbot</h4>
+                            <p class="text-secondary small">Lịch sử hội thoại giữa khách hàng và AI Agent sẽ được ghi nhận tại đây.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FEEDBACK SECTION -->
+                <div id="feedback-section" class="tab-content-section" style="display: none;">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2"><i class="fas fa-star-half-stroke text-warning me-2"></i>Phản Hồi Khách Hàng (Feedback)</h1>
+                    </div>
+                    <div class="card p-4 text-center">
+                        <div class="py-5">
+                            <i class="fas fa-comment-dots fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">Chưa có phản hồi nào</h4>
+                            <p class="text-secondary small">Các đánh giá và phản hồi của người dùng về dịch vụ/chatbot sẽ xuất hiện ở đây.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="uploadForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="uploadModalLabel"><i class="fas fa-file-pdf text-danger me-2"></i>Upload Tài Liệu PDF Cho RAG</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="categorySelect" class="form-label fw-bold">Danh Mục (Category)</label>
+                            <select class="form-select" id="categorySelect" onchange="checkCategoryInput(this)" required>
+                                <option value="">Đang tải danh mục...</option>
+                            </select>
+                            <input type="text" class="form-control mt-2" id="newCategoryInput" placeholder="Nhập tên danh mục mới..." style="display: none;">
+                        </div>
+                        <div class="mb-3">
+                            <label for="pdfFile" class="form-label fw-bold">Chọn File PDF</label>
+                            <input class="form-control" type="file" id="pdfFile" accept=".pdf" required>
+                            <div class="form-text">Hệ thống sẽ tự động tách đoạn và nhúng vector vào cơ sở dữ liệu.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary" id="uploadSubmitBtn">
+                            <span class="spinner-border spinner-border-sm me-1" id="uploadSpinner" style="display: none;" role="status" aria-hidden="true"></span>
+                            Tải Lên & Xử Lý
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom Admin JS -->
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>
