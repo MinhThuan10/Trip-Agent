@@ -5,6 +5,13 @@ import psycopg
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_postgres import PGVector
 from sentence_transformers import CrossEncoder
+from langfuse import get_client
+from langfuse.langchain import CallbackHandler
+import os
+
+os.environ["LANGFUSE_SECRET_KEY"] = settings.LANGFUSE_SECRET_KEY
+os.environ["LANGFUSE_PUBLIC_KEY"] = settings.LANGFUSE_PUBLIC_KEY
+os.environ["LANGFUSE_BASE_URL"] = settings.LANGFUSE_BASE_URL
 
 
 class BaseService:
@@ -43,6 +50,13 @@ class BaseService:
 
         self.flight_search_api_url = settings.FLIGHT_SEARCH_API_URL
         self.api_v1_str = settings.API_V1_STR
+
+
+        # Initialize Langfuse client
+        self.langfuse = get_client()
+
+        # Initialize Langfuse CallbackHandler for Langchain (tracing)
+        self.langfuse_handler = CallbackHandler()
 
 
 

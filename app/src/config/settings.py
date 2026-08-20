@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     # External Flight Search API
     FLIGHT_SEARCH_API_URL: str = "https://vere.me/api/flights/search/"
 
+    # Langfuse
+    LANGFUSE_SECRET_KEY: str
+    LANGFUSE_PUBLIC_KEY: str
+    LANGFUSE_BASE_URL: str
+
     model_config = SettingsConfigDict(env_file=".env" if os.path.exists(".env") else None, env_file_encoding="utf-8")
     
 settings = Settings()

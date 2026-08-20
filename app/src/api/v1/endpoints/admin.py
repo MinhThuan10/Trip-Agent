@@ -1,6 +1,5 @@
 ﻿from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Query
 from fastapi.responses import FileResponse
-from typing import List, Optional
 import os
 import shutil
 from app.src.services.rag_service import rag_service
