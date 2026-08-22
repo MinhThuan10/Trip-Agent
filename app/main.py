@@ -1,7 +1,7 @@
 ﻿from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from app.src.api.v1.endpoints import flights, chat, admin
+from app.src.api.v1.endpoints import chat, admin
 from app.src.config.settings import settings
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
@@ -22,7 +22,6 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Include routers
-app.include_router(flights.router, prefix=f"{settings.API_V1_STR}/flights", tags=["Flights"])
 app.include_router(chat.router, prefix=f"{settings.API_V1_STR}/chat", tags=["Chat"])
 app.include_router(admin.router, prefix=f"{settings.API_V1_STR}/admin", tags=["Admin"])
 

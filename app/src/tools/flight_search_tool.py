@@ -36,7 +36,7 @@ def search_flights_external(
         "language": language.upper(),
         "view_mode": view_mode
     }
-    
+    print(payload)
     try:
         with httpx.Client(timeout=30.0) as client:
             response = client.post(base_service.flight_search_api_url, json=payload)
