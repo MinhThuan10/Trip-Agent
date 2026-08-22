@@ -16,7 +16,9 @@ class Settings(BaseSettings):
 
     
     # External Flight Search API
-    FLIGHT_SEARCH_API_URL: str = "https://vere.me/api/flights/search/"
+    FLIGHT_SEARCH_API_URL: str
+
+    CHAT_API_KEY: str
 
     # Langfuse
     LANGFUSE_SECRET_KEY: str

@@ -1,11 +1,16 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Security
+from fastapi.security import APIKeyHeader
 import uuid
 from app.src.services.base import base_service
 from app.src.graphs.multi_agent_graph import multi_agent_graph
+from app.src.config.settings import settings
 from langchain_core.messages import HumanMessage, AIMessage
 from pydantic import BaseModel, Field
-from typing import Optional, Any, Dict, List
+from typing import Any, Dict, List
 import json
+from datetime import datetime
+
+
 router = APIRouter()
 
 class ChatRequest(BaseModel):
@@ -26,8 +31,26 @@ class ChatResponse(BaseModel):
     messages: List[ChatMessageResponse] = []
 
 
+api_key_header = APIKeyHeader(
+    name="X-API-Key",
+    auto_error=False,
+)
+
+API_KEY = settings.CHAT_API_KEY
+
+async def verify_api_key(
+    api_key: str = Security(api_key_header),
+):
+    if not API_KEY or api_key != API_KEY:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or missing API Key",
+        )
+
+    return api_key
+
 @router.post("", response_model=ChatResponse)
-def chat_endpoint(payload: ChatRequest):
+async def chat_endpoint(payload: ChatRequest, api_key=Security(verify_api_key)):
     try:
         conv_id = payload.conversation_id
         user_message = payload.message
@@ -88,11 +111,6 @@ def chat_endpoint(payload: ChatRequest):
                     }
                 )
 
-            response_parts = result_state.get(
-                "response_parts",
-                []
-            )
-            
             
             # ============================================================
             # 5. Lấy response parts
@@ -120,10 +138,9 @@ def chat_endpoint(payload: ChatRequest):
                 if part_type == "text":
 
                     content = data.get("content", "")
-
                     metadata = {
                         "part_type": "text",
-                        "sources": data.get("sources", []),
+                        "data": data.get("sources", []),
                     }
 
                 # ---------------------------------------------
@@ -131,12 +148,41 @@ def chat_endpoint(payload: ChatRequest):
                 # ---------------------------------------------
 
                 elif part_type == "flight_table":
+                    sources = data.get("sources", [])
 
-                    content = "Danh sách chuyến bay"
+                    depart_date = None
+
+                    for source in sources:
+                        if source.get("tool") == "tool_search_flights":
+
+                            content_data = source.get("content", {})
+                            data = content_data.get("data", {})
+                            fare_data = data.get("fare_data", [])
+
+                            if fare_data:
+                                first_fare = fare_data[0]
+                                flights = first_fare.get("flights", [])
+
+                                if flights:
+                                    start_date = flights[0].get("start_date")
+                                    if start_date:
+                                        depart_date = datetime.fromisoformat(
+                                            start_date.replace("Z", "+00:00")
+                                        ).strftime("%d-%m-%Y")
+
+                            if depart_date:
+                                break
+
+                    
+                    content = (
+                        f"Danh sách các chuyến bay vào ngày {depart_date}"
+                        if depart_date
+                        else "Danh sách chuyến bay"
+                    )
 
                     metadata = {
                         "part_type": "flight_table",
-                        "data": data,
+                        "data": sources,
                     }
 
                 # ---------------------------------------------
@@ -156,23 +202,23 @@ def chat_endpoint(payload: ChatRequest):
                     }
 
 
-            # 5. Lưu phản hồi của AI vào DB
-            message_id = str(uuid.uuid4())
-            cur.execute(
-                "INSERT INTO messages (id, conversation_id, role, content, message_type, metadata, created_at) VALUES (%s, %s, %s, %s, %s, %s, NOW());",
-                (message_id, db_conversation_id, "assistant", content, part_type, json.dumps(metadata,ensure_ascii=False))
-            )
-
-            # Build API response
-            response_messages.append(
-                ChatMessageResponse(
-                    id=message_id,
-                    role="assistant",
-                    content=content,
-                    message_type=part_type,
-                    metadata=metadata,
+                # 5. Lưu phản hồi của AI vào DB
+                message_id = str(uuid.uuid4())
+                cur.execute(
+                    "INSERT INTO messages (id, conversation_id, role, content, message_type, metadata, created_at) VALUES (%s, %s, %s, %s, %s, %s, NOW());",
+                    (message_id, db_conversation_id, "assistant", content, part_type, json.dumps(metadata,ensure_ascii=False))
                 )
-            )
+
+                # Build API response
+                response_messages.append(
+                    ChatMessageResponse(
+                        id=message_id,
+                        role="assistant",
+                        content=content,
+                        message_type=part_type,
+                        metadata=metadata,
+                    )
+                )
 
             # Cập nhật updated_at cho conversation
             cur.execute(
