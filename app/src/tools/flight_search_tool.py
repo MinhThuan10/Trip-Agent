@@ -1,6 +1,9 @@
 ﻿import httpx
+
 from typing import Optional, Dict, Any, List
+
 from app.src.services.base import base_service
+
 
 def search_flights_external(
     start_point: str,
@@ -10,40 +13,97 @@ def search_flights_external(
     chd: int = 0,
     inf: int = 0,
     flight_type: str = "DOMESTIC",
-    airline: Optional[str] = "VN",
+    airlines: Optional[List[str]] = None,
     itinerary: int = 0,
     language: str = "VI",
-    view_mode: int = 2
+    view_mode: int = 2,
 ) -> Dict[str, Any]:
     """
-    Search for flights using the external flight search API.
-    Mandatory parameters: start_point, end_point, depart_date.
+    Search flights from one or multiple airlines.
+
+    airlines:
+        ["VN"]
+        ["VN", "VJ", "QH"]
     """
-    payload = {
-        "adt": adt,
-        "chd": chd,
-        "inf": inf,
-        "flight_type": flight_type.upper(),
-        "flights": [
-            {
-                "start_point": start_point,
-                "end_point": end_point,
-                "depart_date": depart_date,
-                "airline": airline
-            }
-        ],
-        "itinerary": itinerary,
-        "language": language.upper(),
-        "view_mode": view_mode
-    }
-    print(payload)
+
+    if not airlines:
+        airlines = ["VN"]
+
+    all_fare_data = []
+    results = []
+
     try:
         with httpx.Client(timeout=30.0) as client:
-            response = client.post(base_service.flight_search_api_url, json=payload)
-            response.raise_for_status()
-            return {"success": True, "data": response.json()}
-    except httpx.HTTPStatusError as e:
-        return {"success": False, "error": f"HTTP error occurred: {e.response.status_code} - {e.response.text}"}
-    except Exception as e:
-        return {"success": False, "error": str(e)}
 
+            for airline in airlines:
+
+                payload = {
+                    "adt": adt,
+                    "chd": chd,
+                    "inf": inf,
+                    "flight_type": flight_type.upper(),
+                    "flights": [
+                        {
+                            "start_point": start_point,
+                            "end_point": end_point,
+                            "depart_date": depart_date,
+                            "airline": airline,
+                        }
+                    ],
+                    "itinerary": itinerary,
+                    "language": language.upper(),
+                    "view_mode": view_mode,
+                }
+
+                print(f"Searching airline: {airline}")
+                print(payload)
+
+                response = client.post(
+                    base_service.flight_search_api_url,
+                    json=payload,
+                )
+
+                response.raise_for_status()
+
+                data = response.json()
+
+                results.append({
+                    "airline": airline,
+                    "success": True,
+                    "data": data,
+                })
+
+                # Gộp fare_data
+                fare_data = data.get("fare_data", [])
+
+                if fare_data:
+                    all_fare_data.extend(fare_data)
+
+        return {
+            "success": True,
+            "data": {
+                "flight_type": flight_type.upper(),
+                "itinerary": itinerary,
+                "fare_data": all_fare_data,
+                "airlines": airlines,
+                "results": results,
+            },
+        }
+
+    except httpx.HTTPStatusError as e:
+
+        return {
+            "success": False,
+            "error": (
+                f"HTTP error occurred: "
+                f"{e.response.status_code} - "
+                f"{e.response.text}"
+            ),
+        }
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "error": str(e),
+        }

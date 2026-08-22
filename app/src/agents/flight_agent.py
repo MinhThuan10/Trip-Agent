@@ -65,6 +65,8 @@ def tool_get_all_airline_codes() -> list:
     return get_all_airline_codes()
 
 
+from typing import List
+
 @tool
 def tool_search_flights(
     start_point: str,
@@ -74,16 +76,34 @@ def tool_search_flights(
     chd: int = 0,
     inf: int = 0,
     flight_type: str = "DOMESTIC",
-    airline: str = "VN",
+    airlines: List[str] | None = None,
     itinerary: int = 0,
     language: str = "VI",
     view_mode: int = 2,
 ) -> dict:
     """Thực hiện tìm kiếm chuyến bay qua hệ thống bên ngoài.
 
-    Yêu cầu mã sân bay IATA đi, đến (ví dụ: 'HAN', 'SGN')
-    và ngày khởi hành định dạng YYYY-MM-DD.
+    Args:
+        start_point: Mã IATA sân bay đi, ví dụ HAN, SGN.
+        end_point: Mã IATA sân bay đến, ví dụ SGN, UIH.
+        depart_date: Ngày khởi hành, định dạng YYYY-MM-DD.
+        adt: Số lượng người lớn.
+        chd: Số lượng trẻ em.
+        inf: Số lượng em bé.
+        flight_type: Loại chuyến bay, mặc định DOMESTIC.
+        airlines: Danh sách mã hãng bay IATA, ví dụ
+            ["VN"], ["VJ"], hoặc ["VN", "VJ", "QH"].
+        itinerary: Loại hành trình.
+        language: Ngôn ngữ.
+        view_mode: Chế độ hiển thị.
+
+    Returns:
+        Kết quả tìm kiếm chuyến bay từ các hãng được yêu cầu.
     """
+
+    if not airlines:
+        airlines = ["VN"]
+
     return search_flights_external(
         start_point=start_point,
         end_point=end_point,
@@ -92,7 +112,7 @@ def tool_search_flights(
         chd=chd,
         inf=inf,
         flight_type=flight_type,
-        airline=airline,
+        airlines=airlines,
         itinerary=itinerary,
         language=language,
         view_mode=view_mode,
