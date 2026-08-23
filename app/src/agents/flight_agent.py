@@ -3,10 +3,9 @@ from typing import Any, Dict, List
 import json
 from langchain.agents import create_agent
 from langchain_core.tools import tool
-from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_core.messages import ToolMessage
 from app.src.services.base import base_service
-from app.src.tools.search_tools import (
+from app.src.tools.search_flight_tools import (
     search_airports,
     search_airlines,
     get_all_airline_codes,
@@ -250,9 +249,5 @@ class FlightAgent:
                 "sources": [],
             }
 
- 
-# ============================================================
-# Instance
-# ============================================================
 
 flight_agent = FlightAgent()

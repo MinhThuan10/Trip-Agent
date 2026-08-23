@@ -1,234 +1,131 @@
 ﻿from typing import List, Dict, Any, Optional
+import json
 
-from langchain_core.documents import Document
-from langchain_core.messages import BaseMessage, HumanMessage
+from langchain_core.messages import HumanMessage
+from langchain.agents import create_agent
+from langchain_core.messages import ToolMessage
 
 from app.src.services.base import base_service
-from app.src.services.rag_service import rag_service
+from langchain_core.tools import tool
+from app.src.tools.search_support_tools import (
+    retrieve_and_rerank,
+    build_context
+)
+# ============================================================
+# Tools
+# ============================================================
 
-support_prompt = base_service.langfuse.get_prompt("Support_Prompt")
+@tool
+def search_support(query: str) -> str:
+    """
+    Search internal customer support knowledge base.
+    """
+
+    documents = retrieve_and_rerank(query)
+
+    context = build_context(documents)
+
+    return {
+        "query": query,
+        "documents": documents,
+        "context": context,
+    }
+
 
 class SupportRAGAgent:
-
-
+    support_prompt = base_service.langfuse.get_prompt("Support_Prompt")
     def __init__(
-        self,
-        llm=None,
-        rag_service_instance=None,
-        ranking_model=None,
-        top_k_retrieve: int = 10,
-        top_k_final: int = 4,
-        rerank_threshold: float = 0.6,
-    ):
-        """
-        Khởi tạo Support RAG Agent.
+            self,
+            model=None,
+            tools: List[Any] | None = None,
+        ):
 
-        Args:
-            llm:
-                LLM dùng để sinh câu trả lời.
+        self.model = model or base_service.llm
 
-            rag_service_instance:
-                Service dùng để retrieve documents.
-
-            ranking_model:
-                Model dùng để rerank documents.
-
-            top_k_retrieve:
-                Số lượng documents lấy từ vector search.
-
-            top_k_final:
-                Số lượng documents tối đa sau reranking.
-
-            rerank_threshold:
-                Ngưỡng score tối thiểu để giữ document.
-        """
-
-        self.llm = llm or base_service.llm
-        self.rag_service = (
-            rag_service_instance
-            or rag_service
-        )
-        self.ranking_model = (
-            ranking_model
-            or base_service.ranking_model
-        )
-
-        self.top_k_retrieve = top_k_retrieve
-        self.top_k_final = top_k_final
-        self.rerank_threshold = rerank_threshold
-
-    # =========================================================
-    # Retrieval
-    # =========================================================
-
-    def retrieve_and_rerank(
-        self,
-        query: str,
-    ) -> List[Document]:
-        """
-        Retrieve documents từ vector store
-        và rerank bằng ranking model.
-        """
-
-        retrieved_docs = self.rag_service.similarity_search(
-            query=query,
-            k=self.top_k_retrieve,
-        )
-
-        if not retrieved_docs:
-            return []
-
-        pairs = [
-            (query, doc.page_content)
-            for doc in retrieved_docs
+        self.tools = tools or [
+            search_support,
         ]
 
-        scores = self.ranking_model.predict(pairs)
-
-        scored_docs = sorted(
-            zip(scores, retrieved_docs),
-            key=lambda item: item[0],
-            reverse=True,
+        self.agent = create_agent(
+            model=self.model,
+            tools=self.tools,
+            system_prompt=self.support_prompt.prompt,
         )
 
-        final_docs = [
-            doc
-            for score, doc in scored_docs[:self.top_k_final]
-            if score >= self.rerank_threshold
-        ]
-
-        return final_docs
-
-    # =========================================================
-    # Context
-    # =========================================================
-
-    def build_context(
-        self,
-        docs: List[Document],
-    ) -> str:
-        """
-        Chuyển retrieved documents thành context
-        cho LLM.
-        """
-
-        if not docs:
-            return "Không có tài liệu liên quan."
-
-        context_parts = []
-
-        for idx, doc in enumerate(docs, 1):
-
-            source = doc.metadata.get(
-                "file_name",
-                "Tài liệu hỗ trợ",
-            )
-
-            category = doc.metadata.get(
-                "category",
-                "chung",
-            )
-
-            context_parts.append(
-                f"--- Tài liệu {idx} "
-                f"[{source} | {category}] ---\n"
-                f"{doc.page_content}"
-            )
-
-        return "\n\n".join(context_parts)
-
-    # =========================================================
-    # Generate answer
-    # =========================================================
-
-    def generate_answer(
-        self,
-        query: str,
-        context: str,
-    ) -> str:
-        """
-        Sinh câu trả lời dựa trên query + retrieved context.
-        """
-
-        messages = [
-            {
-                "role": "system",
-                "content": support_prompt.prompt,
-            },
-            {
-                "role": "user",
-                "content": f"\n=== TÀI LIỆU THAM KHẢO ===\n {context}\n ============================\n Query User: {query}",
-            },
-        ]
-
-        response = self.llm.invoke(messages, config={"callbacks": [base_service.langfuse_handler]})
-
-        return getattr(
-            response,
-            "content",
-            str(response),
-        )
-
-    # =========================================================
-    # Main execution
-    # =========================================================
-
-    def invoke(
-        self,
-        input_data: Dict[str, Any],
-    ) -> Dict[str, Any]:
-        """
-        Interface chuẩn để Multi-Agent Graph gọi Support Agent.
-
-        Expected input:
-
-        {
-            "messages": [...]
-        }
-        """
-
+    # ========================================================
+    # Process request
+    # ========================================================
+    def process_request(
+            self,
+            input_data: Dict[str, Any],
+        ) -> Dict[str, Any]:
+    
         try:
-
-            messages = input_data.get(
-                "messages",
-                [],
+            response = self.agent.invoke(
+                input_data,
+                config={
+                    "callbacks": [
+                        base_service.langfuse_handler
+                    ]
+                },
             )
 
-            query = self._extract_latest_user_message(
-                messages
-            )
+            messages = response.get("messages", [])
 
-            if not query:
+            if not messages:
                 return {
-                    "success": False,
-                    "answer": "Không tìm thấy câu hỏi của khách hàng.",
+                    "success": True,
+                    "answer": "Đã xử lý yêu cầu.",
                     "sources": [],
                 }
 
-            relevant_docs = self.retrieve_and_rerank(
-                query
-            )
+            # =========================
+            # 1. Lấy answer cuối cùng
+            # =========================
 
-            context = self.build_context(
-                relevant_docs
-            )
+            answer = ""
 
-            answer = self.generate_answer(
-                query=query,
-                context=context,
-            )
+            for message in reversed(messages):
+                # Không lấy ToolMessage làm answer
+                if isinstance(message, ToolMessage):
+                    continue
 
-            sources = [
-                {
-                    "file_name": doc.metadata.get(
-                        "file_name"
-                    ),
-                    "category": doc.metadata.get(
-                        "category"
-                    ),
-                }
-                for doc in relevant_docs
-            ]
+                content = getattr(message, "content", None)
+
+                if content:
+                    answer = content
+                    break
+
+            # =========================
+            # 2. Lấy kết quả từ tools
+            # =========================
+
+            sources = []
+
+            for message in messages:
+                if isinstance(message, ToolMessage):
+
+                    content = message.content
+
+                    if isinstance(content, str):
+                        try:
+                            content = json.loads(content)
+                        except json.JSONDecodeError:
+                            pass
+
+                    sources.append({
+                        "tool": getattr(
+                            message,
+                            "name",
+                            None,
+                        ),
+                        "tool_call_id": getattr(
+                            message,
+                            "tool_call_id",
+                            None,
+                        ),
+                        "content": content,
+                    })
 
             return {
                 "success": True,
@@ -240,48 +137,9 @@ class SupportRAGAgent:
 
             return {
                 "success": False,
-                "answer": (
-                    "Đã xảy ra lỗi khi xử lý "
-                    f"yêu cầu hỗ trợ: {str(e)}"
-                ),
+                "answer": f"Lỗi khi xử lý agent: {str(e)}",
                 "sources": [],
             }
-
-    # =========================================================
-    # Helpers
-    # =========================================================
-
-    @staticmethod
-    def _extract_latest_user_message(
-        messages: List[Any],
-    ) -> Optional[str]:
-        """
-        Lấy message user mới nhất.
-        """
-
-        for message in reversed(messages):
-
-            if isinstance(message, dict):
-
-                if message.get("role") == "user":
-                    return message.get(
-                        "content",
-                        "",
-                    )
-
-            elif isinstance(
-                message,
-                HumanMessage,
-            ):
-
-                return message.content
-
-            elif hasattr(message, "type"):
-
-                if message.type == "human":
-                    return message.content
-
-        return None
 
 
 support_rag_agent = SupportRAGAgent()

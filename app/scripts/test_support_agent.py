@@ -39,7 +39,7 @@ def main():
         ]
     }
 
-    result = support_rag_agent.invoke(input_data)
+    result = support_rag_agent.process_request(input_data)
 
     print("\n--- KẾT QUẢ PHẢN HỒI ---")
     print(f"Thành công: {result.get('success')}")
@@ -57,11 +57,9 @@ def main():
         return
 
     for idx, src in enumerate(sources, 1):
-        print(
-            f"{idx}. "
-            f"File: {src.get('file_name')} | "
-            f"Category: {src.get('category')}"
-        )
+            print(
+                src
+            )
 
 
 if __name__ == "__main__":

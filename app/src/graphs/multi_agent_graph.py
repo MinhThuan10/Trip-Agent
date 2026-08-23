@@ -105,7 +105,7 @@ def call_flight_worker(state: State):
 
 def call_support_worker(state: State):
     messages = state["messages"]
-    result = support_rag_agent.invoke({"messages": messages})
+    result = support_rag_agent.process_request({"messages": messages})
     
     completed = set(state.get("completed_workers", []))
     completed.add("support_agent")
