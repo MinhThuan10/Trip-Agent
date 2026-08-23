@@ -237,4 +237,5 @@ async def chat_endpoint(payload: ChatRequest, api_key=Security(verify_api_key)):
         raise he
     except Exception as e:
         conn.rollback()
+        print(str(e))
         raise HTTPException(status_code=500, detail=str(e))

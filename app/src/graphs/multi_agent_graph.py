@@ -1,10 +1,13 @@
 ﻿from typing import List, TypedDict, Any, Literal
 from langgraph.graph import StateGraph, START, END
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from app.src.agents.flight_agent import flight_agent
 from app.src.agents.support_agent import support_rag_agent
 from app.src.services.base import base_service
 from pydantic import BaseModel, Field
+
+
+# Get production prompt
+orchestrator_prompt = base_service.langfuse.get_prompt("Orchestrator_Prompt")
 
 class State(TypedDict):
     messages: List[Any]
@@ -45,7 +48,6 @@ MAX_ITERATIONS = 5
 
 def orchestrator_node(state: State):
     messages = state.get("messages", [])
-    worker_results = state.get("worker_results", {})
     completed_workers = set(state.get("completed_workers", []))
 
     iteration = state.get("iteration", 0) + 1
@@ -56,45 +58,14 @@ def orchestrator_node(state: State):
             "current_worker": "synthesize",
             "iteration": iteration,
         }
-
-    prompt = f"""
-Bạn là Orchestrator (Điều phối viên chính) của hệ thống đặt vé.
-
-Nhiệm vụ:
-Phân tích yêu cầu người dùng và điều phối worker phù hợp.
-
-Các worker:
-- `flight_agent`: tìm kiếm chuyến bay, giá vé, lịch trình.
-- `support_agent`: quy định, dịch vụ, chính sách và hỗ trợ khách hàng.
-- `synthesize`: tổng hợp kết quả cuối cùng và trả lời người dùng.
-
-Kết quả các worker đã chạy:
-{worker_results}
-
-Các worker ĐÃ HOÀN THÀNH:
-{list(completed_workers)}
-
-QUY TẮC:
-1. Không gọi lại worker đã nằm trong danh sách "ĐÃ HOÀN THÀNH".
-2. Worker được xem là hoàn thành ngay cả khi:
-   - không tìm thấy thông tin
-   - không đủ thông tin
-   - không có kết quả
-   - trả về lỗi.
-3. Nếu đã có đủ thông tin để trả lời → chọn `synthesize`.
-4. Nếu không còn worker phù hợp chưa chạy → chọn `synthesize`.
-5. Chỉ gọi worker chưa hoàn thành khi thực sự cần thiết.
-
-Hãy quyết định bước tiếp theo.
-"""
-
+    
     llm = base_service.llm.with_structured_output(
         OrchestratorPlan
     )
 
     response = llm.invoke(
         [
-            {"role": "system", "content": prompt},
+            {"role": "system", "content": orchestrator_prompt.prompt},
             *messages,
         ],
         config={

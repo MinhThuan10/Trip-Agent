@@ -6,29 +6,10 @@ from langchain_core.messages import BaseMessage, HumanMessage
 from app.src.services.base import base_service
 from app.src.services.rag_service import rag_service
 
+support_prompt = base_service.langfuse.get_prompt("Support_Prompt")
 
 class SupportRAGAgent:
 
-    SYSTEM_PROMPT = """
-Bạn là một trợ lý ảo chăm sóc khách hàng chuyên nghiệp
-của hệ thống bán vé máy bay.
-
-Nhiệm vụ của bạn là giải đáp thắc mắc của khách hàng
-dựa ONLY vào TÀI LIỆU THAM KHẢO được cung cấp.
-
-Quy tắc:
-
-1. Chỉ sử dụng thông tin có trong TÀI LIỆU THAM KHẢO.
-2. Không tự suy đoán hoặc bịa thêm thông tin.
-3. Nếu tài liệu không chứa đủ thông tin để trả lời,
-   hãy thông báo rằng bạn chưa có đủ thông tin trong
-   tài liệu hiện có và đề nghị khách hàng liên hệ
-   bộ phận hỗ trợ.
-4. Trả lời bằng tiếng Việt.
-5. Trả lời ngắn gọn, rõ ràng, lịch sự và hữu ích.
-6. Nếu có nhiều tài liệu liên quan, hãy tổng hợp chúng
-   thành một câu trả lời thống nhất.
-"""
 
     def __init__(
         self,
@@ -169,21 +150,14 @@ Quy tắc:
         Sinh câu trả lời dựa trên query + retrieved context.
         """
 
-        system_prompt = (
-            f"{self.SYSTEM_PROMPT}\n\n"
-            "=== TÀI LIỆU THAM KHẢO ===\n"
-            f"{context}\n"
-            "============================"
-        )
-
         messages = [
             {
                 "role": "system",
-                "content": system_prompt,
+                "content": support_prompt.prompt,
             },
             {
                 "role": "user",
-                "content": query,
+                "content": f"\n=== TÀI LIỆU THAM KHẢO ===\n {context}\n ============================\n Query User: {query}",
             },
         ]
 

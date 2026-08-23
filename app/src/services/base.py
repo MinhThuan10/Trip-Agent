@@ -8,7 +8,9 @@ from sentence_transformers import CrossEncoder
 from langfuse import get_client
 from langfuse.langchain import CallbackHandler
 import os
+from langfuse import Langfuse
 
+# Initialize Langfuse client
 os.environ["LANGFUSE_SECRET_KEY"] = settings.LANGFUSE_SECRET_KEY
 os.environ["LANGFUSE_PUBLIC_KEY"] = settings.LANGFUSE_PUBLIC_KEY
 os.environ["LANGFUSE_BASE_URL"] = settings.LANGFUSE_BASE_URL
@@ -54,7 +56,7 @@ class BaseService:
 
         # Initialize Langfuse client
         self.langfuse = get_client()
-
+        
         # Initialize Langfuse CallbackHandler for Langchain (tracing)
         self.langfuse_handler = CallbackHandler()
 
