@@ -18,17 +18,20 @@ os.environ["LANGFUSE_BASE_URL"] = settings.LANGFUSE_BASE_URL
 
 class BaseService:
     def __init__(self):
-        # self.llm = ChatOpenAI(
-        #     model="gemini-3.5-flash-lite",
-        #     api_key="",
-        #     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-        #     temperature=0,
-        # )
-        self.llm = ChatGoogleGenerativeAI(
-            model="gemini-3.5-flash-lite",
-            google_api_key=settings.LLM_API_KEY,
+        
+        self.llm = ChatOpenAI(
+            model=settings.LLM_MODEL_NAME,
+            api_key=settings.LLM_API_KEY,
+            base_url= settings.LLM_API_BASE,
             temperature=0,
         )
+
+        # self.llm = ChatGoogleGenerativeAI(
+        #     model=settings.LLM_MODEL_NAME,
+        #     google_api_key=settings.LLM_API_KEY,
+        #     temperature=0,
+        # )
+
         self.embedding_model = HuggingFaceEmbeddings(
             model_name=settings.EMBEDDING_MODEL,
             model_kwargs={

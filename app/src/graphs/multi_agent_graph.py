@@ -121,7 +121,6 @@ def call_support_worker(state: State):
 
 
 def synthesize_node(state: State):
-
     worker_results = state.get("worker_results", {})
 
     parts = []
@@ -156,21 +155,17 @@ def synthesize_node(state: State):
 
     if support_result and support_result.get("success"):
 
-        for answer in support_result.get("answer", []):
-
-            if answer.get("type") == "text":
-
-                parts.append(
-                    ResponsePart(
-                        type="text",
-                        data={
-                            "content": answer.get("text", ""),
-                            "sources": support_result.get(
-                                "sources", []
-                            ),
-                        },
-                    )
-                )
+        parts.append(
+            ResponsePart(
+                type="text",
+                data={
+                    "content": support_result.get("answer"),
+                    "sources": support_result.get(
+                        "sources", []
+                    ),
+                },
+            )
+        )
 
     # ============================================================
     # FLIGHT AGENT
@@ -182,19 +177,15 @@ def synthesize_node(state: State):
         # --------------------------------------------------------
         # 1. Natural language response
         # --------------------------------------------------------
-        for answer in flight_result.get("answer", []):
-
-            if answer.get("type") == "text":
-
-                parts.append(
-                    ResponsePart(
-                        type="text",
-                        data={
-                            "content": answer.get("text", ""),
-                            "sources": [],
-                        },
-                    )
-                )
+        parts.append(
+            ResponsePart(
+                type="text",
+                data={
+                    "content": flight_result.get("answer"),
+                    "sources": [],
+                },
+            )
+        )
 
         # --------------------------------------------------------
         # 2. Flight data từ API

@@ -17,5 +17,20 @@ services:
       timeout: 5s
       retries: 5
 
+  litellm:
+    image: docker.litellm.ai/berriai/litellm-database:latest
+    container_name: litellm
+    restart: always
+    ports:
+      - "4000:4000"
+    environment:
+      LITELLM_MASTER_KEY: sk-1234
+      LITELLM_SALT_KEY: sk-XXXXXXXXXXXXXXXX
+      DATABASE_URL: postgresql://litellm:litellm@db:5432/litellm
+      STORE_MODEL_IN_DB: "True"
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   pgvector_data:

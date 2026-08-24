@@ -10,6 +10,7 @@ from app.src.tools.search_flight_tools import (
     search_airlines,
     get_all_airline_codes,
 )
+from app.src.tools.llm_tools import extract_text_content
 from app.src.tools.flight_search_tool import search_flights_external
 
 
@@ -100,9 +101,6 @@ def tool_search_flights(
         Kết quả tìm kiếm chuyến bay từ các hãng được yêu cầu.
     """
 
-    if not airlines:
-        airlines = ["VN"]
-
     return search_flights_external(
         start_point=start_point,
         end_point=end_point,
@@ -163,6 +161,7 @@ class FlightAgent:
     # Process request
     # ========================================================
 
+
     def process_request(
         self,
         input_data: Dict[str, Any],
@@ -194,14 +193,15 @@ class FlightAgent:
             answer = ""
 
             for message in reversed(messages):
-                # Không lấy ToolMessage làm answer
+
                 if isinstance(message, ToolMessage):
                     continue
 
                 content = getattr(message, "content", None)
 
-                if content:
-                    answer = content
+                answer = extract_text_content(content)
+
+                if answer:
                     break
 
             # =========================

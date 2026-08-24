@@ -11,6 +11,8 @@ from app.src.tools.search_support_tools import (
     retrieve_and_rerank,
     build_context
 )
+from app.src.tools.llm_tools import extract_text_content
+
 # ============================================================
 # Tools
 # ============================================================
@@ -84,16 +86,17 @@ class SupportRAGAgent:
             # =========================
 
             answer = ""
-
+            
             for message in reversed(messages):
-                # Không lấy ToolMessage làm answer
+
                 if isinstance(message, ToolMessage):
                     continue
 
                 content = getattr(message, "content", None)
 
-                if content:
-                    answer = content
+                answer = extract_text_content(content)
+
+                if answer:
                     break
 
             # =========================
