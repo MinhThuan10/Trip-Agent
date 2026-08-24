@@ -100,6 +100,17 @@ def tool_search_flights(
     Returns:
         Kết quả tìm kiếm chuyến bay từ các hãng được yêu cầu.
     """
+    if not start_point:
+        raise ValueError("Missing start_point")
+
+    if not end_point:
+        raise ValueError("Missing end_point")
+
+    if not depart_date:
+        raise ValueError("Missing depart_date")
+
+    if not airlines:
+        raise ValueError("Missing airlines")
 
     return search_flights_external(
         start_point=start_point,

@@ -5,32 +5,69 @@ import shutil
 from app.src.services.rag_service import rag_service
 import psycopg
 from app.src.config.settings import settings
+import json
+from pathlib import Path
 
 router = APIRouter()
 
+AIRPORTS_FILE = os.path.join(os.path.dirname(__file__), "../../../../data/airports.jsonl")
+AIRLINES_FILE = os.path.join(os.path.dirname(__file__), "../../../../data/airlines.jsonl")
+
+
+
+def load_jsonl(file_path: str):
+    try:
+        data = []
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+
+                if line:
+                    data.append(json.loads(line))
+
+        return data
+
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=500,
+            detail=f"File not found: {file_path}"
+        )
+
+    except json.JSONDecodeError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Invalid JSONL file: {file_path}, error: {str(e)}"
+        )
+
 @router.get("/airports")
 def get_airports(limit: int = 100, offset: int = 0):
-    try:
-        with psycopg.connect(settings.DATABASE_URL) as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT iata_code, airport_name, city, country, airport_type FROM airport_embeddings ORDER BY iata_code LIMIT %s OFFSET %s;", (limit, offset))
-                rows = cur.fetchall()
-                airports = [{"iata_code": r[0], "airport_name": r[1], "city": r[2], "country": r[3], "airport_type": r[4]} for r in rows]
-                return {"success": True, "data": airports}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    airports = load_jsonl(AIRPORTS_FILE)
+
+    data = airports[offset: offset + limit]
+
+    return {
+        "success": True,
+        "data": data,
+        "total": len(airports),
+        "limit": limit,
+        "offset": offset,
+    }
+
 
 @router.get("/airlines")
 def get_airlines(limit: int = 100, offset: int = 0):
-    try:
-        with psycopg.connect(settings.DATABASE_URL) as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT iata_code, icao_code, airline_name, short_name FROM airline_embeddings ORDER BY iata_code LIMIT %s OFFSET %s;", (limit, offset))
-                rows = cur.fetchall()
-                airlines = [{"iata_code": r[0], "icao_code": r[1], "airline_name": r[2], "short_name": r[3]} for r in rows]
-                return {"success": True, "data": airlines}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    airlines = load_jsonl(AIRLINES_FILE)
+
+    data = airlines[offset: offset + limit]
+
+    return {
+        "success": True,
+        "data": data,
+        "total": len(airlines),
+        "limit": limit,
+        "offset": offset,
+    }
 
 @router.get("/rag/documents")
 def get_rag_documents():
