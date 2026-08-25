@@ -75,5 +75,5 @@ coverage.xml
 .Trashes # macOS
 Thumbs.db # Windows
 
-/app/data/
+/app/data/uploads
 AGENTS.md

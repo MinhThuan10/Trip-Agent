@@ -2,9 +2,11 @@
 import os
 import unicodedata
 from difflib import get_close_matches
+from pathlib import Path
 
-AIRPORTS_FILE = os.path.join(os.path.dirname(__file__), "../../data/airports.jsonl")
-AIRLINES_FILE = os.path.join(os.path.dirname(__file__), "../../data/airlines.jsonl")
+BASE_DIR = Path(__file__).resolve().parents[2]
+AIRPORTS_FILE = BASE_DIR / "data" / "airports.jsonl"
+AIRLINES_FILE = BASE_DIR / "data" / "airlines.jsonl"
 
 def normalize_text(text: str) -> str:
     if not text:

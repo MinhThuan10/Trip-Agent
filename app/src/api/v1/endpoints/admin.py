@@ -1,11 +1,13 @@
 ﻿from fastapi import APIRouter, HTTPException
 import os
 import json
+from pathlib import Path
 
 router = APIRouter()
 
-AIRPORTS_FILE = os.path.join(os.path.dirname(__file__), "../../../../data/airports.jsonl")
-AIRLINES_FILE = os.path.join(os.path.dirname(__file__), "../../../../data/airlines.jsonl")
+BASE_DIR = Path(__file__).resolve().parents[4]
+AIRPORTS_FILE = BASE_DIR / "data" / "airports.jsonl"
+AIRLINES_FILE = BASE_DIR / "data" / "airlines.jsonl"
 
 
 
