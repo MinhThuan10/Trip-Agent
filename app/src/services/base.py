@@ -1,7 +1,7 @@
 ﻿from langchain_openai import ChatOpenAI
 from langchain_huggingface import HuggingFaceEmbeddings
 from app.src.config.settings import settings
-import psycopg
+import psycopg2
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_postgres import PGVector
 from sentence_transformers import CrossEncoder
@@ -42,7 +42,7 @@ class BaseService:
 
         self.ranking_model = CrossEncoder(settings.RANKING_MODEL, trust_remote_code=True)
 
-        self.database = psycopg.connect(
+        self.database = psycopg2.connect(
             settings.DATABASE_URL
         )
 

@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse
 import os
 import shutil
 from app.src.services.rag_service import rag_service
-import psycopg
+import psycopg2
 from app.src.config.settings import settings
 import json
 
@@ -71,7 +71,7 @@ def get_airlines(limit: int = 100, offset: int = 0):
 @router.get("/rag/documents")
 def get_rag_documents():
     try:
-        with psycopg.connect(settings.DATABASE_URL) as conn:
+        with psycopg2.connect(settings.DATABASE_URL) as conn:
             with conn.cursor() as cur:
                 cur.execute("""
                     SELECT 
@@ -135,7 +135,7 @@ def delete_rag_document(file_name: str = Query(...)):
             os.remove(file_path)
 
         # 2. Xóa các embedding chunks trong PostgreSQL (langchain_pg_embedding)
-        with psycopg.connect(settings.DATABASE_URL) as conn:
+        with psycopg2.connect(settings.DATABASE_URL) as conn:
             with conn.cursor() as cur:
                 cur.execute(
                     "DELETE FROM langchain_pg_embedding WHERE cmetadata->>'file_name' = %s;",
