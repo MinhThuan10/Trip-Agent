@@ -1,7 +1,6 @@
-﻿from typing import List, Dict, Any, Optional
+﻿from typing import List, Dict, Any
 import json
 
-from langchain_core.messages import HumanMessage
 from langchain.agents import create_agent
 from langchain_core.messages import ToolMessage
 

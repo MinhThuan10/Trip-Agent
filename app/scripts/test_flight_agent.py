@@ -1,5 +1,4 @@
 ﻿from app.src.agents.flight_agent import flight_agent
-from langchain_core.messages import HumanMessage
 
 
 def test_flight_agent():

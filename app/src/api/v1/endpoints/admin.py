@@ -6,7 +6,6 @@ from app.src.services.rag_service import rag_service
 import psycopg
 from app.src.config.settings import settings
 import json
-from pathlib import Path
 
 router = APIRouter()
 

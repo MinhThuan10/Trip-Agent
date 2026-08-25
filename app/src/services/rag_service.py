@@ -4,8 +4,6 @@ from pypdf import PdfReader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from app.src.services.base import base_service
-from langchain_postgres import PGVector
-from langchain_postgres.vectorstores import PGVector
 from sqlalchemy import create_engine
 from app.src.config.settings import settings
 
