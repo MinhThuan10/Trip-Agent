@@ -1,7 +1,6 @@
 ﻿from typing import List, TypedDict, Any, Literal
 from langgraph.graph import StateGraph, START, END
 from app.src.agents.flight_agent import flight_agent
-from app.src.agents.support_agent import support_rag_agent
 from app.src.services.base import base_service
 from pydantic import BaseModel, Field
 
@@ -20,8 +19,8 @@ class State(TypedDict):
 
 class OrchestratorPlan(BaseModel):
     plan_steps: List[str] = Field(description="Các bước thực hiện công việc")
-    worker_to_call: Literal["flight_agent", "support_agent", "synthesize"] = Field(
-        description="Worker tiếp theo cần gọi: flight_agent cho vé máy bay, support_agent cho quy định/hỗ trợ/chính sách/tra cứu, synthesize khi đã hoàn thành để trả lời"
+    worker_to_call: Literal["flight_agent", "synthesize"] = Field(
+        description="Worker tiếp theo cần gọi: flight_agent cho vé máy bay, synthesize khi đã hoàn thành để trả lời"
     )
     instruction_for_worker: str = Field(
         description="Hướng dẫn cụ thể cho worker được gọi"
@@ -103,22 +102,6 @@ def call_flight_worker(state: State):
         "completed_workers": list(completed),
     }
 
-def call_support_worker(state: State):
-    messages = state["messages"]
-    result = support_rag_agent.process_request({"messages": messages})
-    
-    completed = set(state.get("completed_workers", []))
-    completed.add("support_agent")
-
-    return {
-        "worker_results": {
-            **state.get("worker_results", {}),
-            "support_agent": result,
-        },
-        "completed_workers": list(completed),
-    }
-
-
 
 def synthesize_node(state: State):
     worker_results = state.get("worker_results", {})
@@ -148,24 +131,6 @@ def synthesize_node(state: State):
             "response_parts": response.model_dump()["parts"]
         }
 
-    # ============================================================
-    # SUPPORT AGENT
-    # ============================================================
-    support_result = worker_results.get("support_agent")
-
-    if support_result and support_result.get("success"):
-
-        parts.append(
-            ResponsePart(
-                type="text",
-                data={
-                    "content": support_result.get("answer"),
-                    "sources": support_result.get(
-                        "sources", []
-                    ),
-                },
-            )
-        )
 
     # ============================================================
     # FLIGHT AGENT
@@ -228,7 +193,6 @@ def route_from_orchestrator(state: State):
 workflow = StateGraph(State)
 workflow.add_node("orchestrator", orchestrator_node)
 workflow.add_node("flight_agent", call_flight_worker)
-workflow.add_node("support_agent", call_support_worker)
 workflow.add_node("synthesize", synthesize_node)
 
 workflow.add_edge(START, "orchestrator")
@@ -238,13 +202,11 @@ workflow.add_conditional_edges(
     route_from_orchestrator,
     {
         "flight_agent": "flight_agent",
-        "support_agent": "support_agent",
         "synthesize": "synthesize",
     }
 )
 
 workflow.add_edge("flight_agent", "orchestrator")
-workflow.add_edge("support_agent", "orchestrator")
 workflow.add_edge("synthesize", END)
 
 multi_agent_graph = workflow.compile()
