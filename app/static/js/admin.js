@@ -1,4 +1,4 @@
-﻿const API_BASE = `${import.meta.env.VITE_API_BASE_URL}`;
+﻿const API_BASE = "/api/v1/admin";
 
 function switchTab(tabId, element) {
     document.querySelectorAll('.tab-content-section').forEach(el => el.style.display = 'none');
