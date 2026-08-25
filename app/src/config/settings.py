@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     LANGFUSE_PUBLIC_KEY: str
     LANGFUSE_BASE_URL: str
 
+    VITE_API_BASE_URL:str
+
     model_config = SettingsConfigDict(env_file=".env" if os.path.exists(".env") else None, env_file_encoding="utf-8")
     
 settings = Settings()
